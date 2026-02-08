@@ -13,7 +13,8 @@ export class AppService {
       const user = await prisma.user.create({
         data: {
           email: 'user@example.com',
-          name: 'Test User'
+          name: 'Test User',
+          password: 'securepassword',
         }
       });
       

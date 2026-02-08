@@ -31,4 +31,14 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
+
+  async register(email: string, name:string, password: string) {
+    const existingUser = await this.userService.findByEmail(email);
+    if (existingUser) {
+      throw new UnauthorizedException('Email already in use');
+    }
+    
+    const newUser = await this.userService.createUser({ email, name, password });
+    return newUser;
+  }    
 }

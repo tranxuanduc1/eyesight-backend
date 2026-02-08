@@ -6,10 +6,16 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  async createUser(data: { email: string; name?: string }): Promise<User> {
-    return await prisma.user.create({
-      data,
+  async createUser(data: { email: string; name?: string; password: string }): Promise<User> {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    
+    const user = await prisma.user.create({
+      data: {
+        ...data,
+        password: hashedPassword,
+      },
     });
+  return user;
   }
 
   async getUserById(id: number): Promise<User | null> {
@@ -38,7 +44,11 @@ export class UserService {
     });
   }
 
-  async updateUser(id: number, data: { email?: string; name?: string }): Promise<User> {
+  async updateUser(id: number, data: { email?: string; name?: string; password?: string }): Promise<User> {
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+    
     return await prisma.user.update({
       where: { id },
       data,
@@ -52,9 +62,9 @@ export class UserService {
   }
 
   async findByEmail(email: string) {
-  return await prisma.user.findUnique({
-    where: { email },
-  });
+    return await prisma.user.findUnique({
+      where: { email },
+    });
   }
 
 
