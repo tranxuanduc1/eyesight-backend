@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  password  String 
+  // Relationship: One user can have many chats
+  chats     Chat[]
+}
+
+model Chat {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  title     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relationship: One chat belongs to one user
+  user      User      @relation(fields: [userId], references: [id])
+  
+  // Relationship: One chat can have many messages
+  messages  Message[]
+}
+
+model Message {
+  id           Int         @id @default(autoincrement())
+  chatId       Int
+  content      String?
+  messageType  MessageType @default(TEXT)
+  mediaUrl     String?     // URL or file path for images/files
+  mediaType    String?     // Type of media (image/png, application/pdf, etc.)
+  metadata     Json?       // Flexible field for future media types and additional data
+  is_belonging_to_user Boolean @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relationship: One message belongs to one chat
+  chat         Chat        @relation(fields: [chatId], references: [id])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+}
