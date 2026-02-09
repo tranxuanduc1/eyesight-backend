@@ -96,3 +96,320 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+
+Now I'll create a comprehensive API documentation for this Eyesight backend project.
+
+# Eyesight Backend API Documentation
+
+This document provides a comprehensive overview of the API endpoints available in the Eyesight backend system. The API is built with NestJS and includes user management, authentication, chat functionality, and messaging capabilities.
+
+## Base URL
+```
+http://localhost:3001
+```
+
+## Authentication
+Most endpoints require authentication using JWT tokens. After logging in, include the token in the Authorization header as follows:
+```
+Authorization: Bearer <access_token>
+```
+
+## API Endpoints
+
+### Public Routes
+
+#### Authentication (`/auth`)
+
+**POST /auth/login**
+- Description: Authenticate a user and return a JWT token
+- Request Body:
+  ```json
+  {
+    "email": "string",
+    "password": "string"
+  }
+  ```
+- Response:
+  ```json
+  {
+    "access_token": "string"
+  }
+  ```
+- Status Codes:
+  - 200: Successful login
+  - 401: Invalid credentials
+
+**POST /auth/register**
+- Description: Register a new user
+- Request Body:
+  ```json
+  {
+    "email": "string",
+    "name": "string",
+    "password": "string"
+  }
+  ```
+- Response: Returns the created user object
+- Status Codes:
+  - 200: Successfully registered
+  - 401: Email already in use
+
+#### Application Information ([/](file:///home/duc/Work/eyesight/backend/Dockerfile))
+
+**GET /**
+- Description: Get a welcome message
+- Response: `"Hello World!"`
+
+**GET /status**
+- Description: Check database connection status
+- Response: Status message indicating database connectivity
+
+### Protected Routes (Require JWT Authentication)
+
+#### Users (`/users`)
+
+**POST /users**
+- Description: Create a new user
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "email": "string",
+    "name": "string",
+    "password": "string"
+  }
+  ```
+- Response: Created user object
+- Status Codes:
+  - 201: User created successfully
+
+**GET /users/me**
+- Description: Get the authenticated user's profile
+- Headers: `Authorization: Bearer <token>`
+- Response: User object with their details
+
+**GET /users/:id**
+- Description: Get a user by ID
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: User object
+
+**GET /users/email/:email**
+- Description: Get a user by email
+- Parameters: `email` (string)
+- Headers: `Authorization: Bearer <token>`
+- Response: User object
+
+**GET /users**
+- Description: Get all users
+- Headers: `Authorization: Bearer <token>`
+- Response: Array of user objects
+
+**PUT /users/:id**
+- Description: Update a user
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "email": "string",
+    "name": "string",
+    "password": "string"
+  }
+  ```
+- Response: Updated user object
+
+**DELETE /users/:id**
+- Description: Delete a user
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Deleted user object
+
+#### Chats (`/chats`)
+
+**POST /chats**
+- Description: Create a new chat
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "userId": 1,
+    "title": "string (optional)"
+  }
+  ```
+- Response: Created chat object
+
+**GET /chats/:id**
+- Description: Get a chat by ID
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Chat object
+
+**GET /chats**
+- Description: Get all chats
+- Headers: `Authorization: Bearer <token>`
+- Response: Array of chat objects
+
+**GET /chats/user/:userId**
+- Description: Get all chats for a specific user
+- Parameters: `userId` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Array of chat objects
+
+**PUT /chats/:id**
+- Description: Update a chat
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "title": "string"
+  }
+  ```
+- Response: Updated chat object
+
+**DELETE /chats/:id**
+- Description: Delete a chat
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Deleted chat object
+
+**POST /chats/:id/messages**
+- Description: Add a message to a chat
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "content": "string (optional)",
+    "messageType": "TEXT | IMAGE | FILE",
+    "mediaUrl": "string (optional)",
+    "mediaType": "string (optional)",
+    "metadata": "object (optional)"
+  }
+  ```
+- Response: Created message object
+
+**GET /chats/:id/messages**
+- Description: Get all messages for a specific chat
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Array of message objects
+
+#### Messages (`/messages`)
+
+**POST /messages**
+- Description: Create a new message
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "chatId": 1,
+    "content": "string (optional)",
+    "messageType": "TEXT | IMAGE | FILE",
+    "mediaUrl": "string (optional)",
+    "mediaType": "string (optional)",
+    "metadata": "object (optional)"
+  }
+  ```
+- Response: Created message object
+
+**GET /messages/:id**
+- Description: Get a message by ID
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Message object
+
+**GET /messages**
+- Description: Get all messages or messages for a specific chat
+- Headers: `Authorization: Bearer <token>`
+- Query Parameters: `chatId` (number, optional)
+- Response: Array of message objects
+
+**PUT /messages/:id**
+- Description: Update a message
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "content": "string (optional)",
+    "messageType": "TEXT | IMAGE | FILE",
+    "mediaUrl": "string (optional)",
+    "mediaType": "string (optional)",
+    "metadata": "object (optional)"
+  }
+  ```
+- Response: Updated message object
+
+**DELETE /messages/:id**
+- Description: Delete a message
+- Parameters: `id` (number)
+- Headers: `Authorization: Bearer <token>`
+- Response: Deleted message object
+
+#### Chatbot (`/chatbot`)
+
+**POST /chatbot**
+- Description: Create a chat with the chatbot
+- Headers: `Authorization: Bearer <token>`
+- Request Body:
+  ```json
+  {
+    "question": "string"
+  }
+  ```
+- Response: Object with response from the chatbot
+
+## Data Models
+
+### User
+- `id`: number (auto-generated)
+- `email`: string (unique)
+- `name`: string (optional)
+- `password`: string (hashed)
+- `createdAt`: timestamp
+- `updatedAt`: timestamp
+- `chats`: array of Chat objects
+
+### Chat
+- `id`: number (auto-generated)
+- `userId`: number (foreign key to User)
+- `title`: string (optional)
+- `createdAt`: timestamp
+- `updatedAt`: timestamp
+- `user`: User object
+- `messages`: array of Message objects
+
+### Message
+- `id`: number (auto-generated)
+- `chatId`: number (foreign key to Chat)
+- `content`: string (optional)
+- `messageType`: enum ('TEXT', 'IMAGE', 'FILE')
+- `mediaUrl`: string (optional)
+- `mediaType`: string (optional)
+- `metadata`: JSON object (optional)
+- `createdAt`: timestamp
+- `updatedAt`: timestamp
+- `chat`: Chat object
+
+## Error Handling
+
+The API returns appropriate HTTP status codes:
+- 200: Success
+- 201: Created
+- 400: Bad Request
+- 401: Unauthorized
+- 404: Not Found
+- 500: Internal Server Error
+
+Error responses typically include a descriptive message explaining the issue.
+
+## Security Considerations
+
+- All sensitive routes are protected with JWT authentication
+- Passwords are hashed using bcrypt
+- User passwords are never returned in API responses
+- Authentication tokens must be included in requests to protected endpoints
+

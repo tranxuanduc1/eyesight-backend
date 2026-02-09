@@ -1,5 +1,5 @@
 // src/user/user.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '../../generated/prisma/client';
 
@@ -15,7 +15,11 @@ export class UserController {
   async createUser(@Body() userData: { email: string; name?: string; password: string }): Promise<User> {
     return this.userService.createUser(userData);
   }
-
+  @Get('me')
+  async getMe(@Req() req: any) {
+    const user=req.user 
+    return this.userService.getUserById(user.userId);
+  }
   @Get(':id')
   async getUserById(@Param('id', ParseIntPipe) id: number): Promise<User | null> {
     return this.userService.getUserById(id);
@@ -25,6 +29,8 @@ export class UserController {
   async getUserByEmail(@Param('email') email: string): Promise<User | null> {
     return this.userService.getUserByEmail(email);
   }
+
+
 
   @Get()
   async getAllUsers(): Promise<User[]> {

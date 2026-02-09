@@ -1,7 +1,10 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { Message } from '../../generated/prisma/client';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('messages')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
