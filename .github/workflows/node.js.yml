@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/user/app
+            cd /home/${{ secrets.SSH_USERNAME }}/app
             git pull origin main
             npm ci
             npm run build --if-present
