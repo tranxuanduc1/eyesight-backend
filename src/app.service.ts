@@ -4,7 +4,7 @@ import prisma  from '../lib/db'
 export class AppService {
 
   getHello(): string {
-    return 'Hello World! v3';
+    return 'Hello World! v4';
   }
 
   async getDatabaseStatus(): Promise<string> {

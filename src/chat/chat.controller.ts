@@ -45,13 +45,7 @@ export class ChatController {
   @Post(':id/messages')
   async addMessageToChat(
     @Param('id', ParseIntPipe) chatId: number,
-    @Body() messageData: { 
-      content?: string; 
-      messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-      mediaUrl?: string; 
-      mediaType?: string;
-      metadata?: object;
-    }
+    @Body() messageData: { content?: string }
   ): Promise<Message> {
     return this.chatService.addMessageToChat(chatId, messageData);
   }

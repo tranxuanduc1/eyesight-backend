@@ -40,23 +40,25 @@ model Chat {
 }
 
 model Message {
-  id           Int         @id @default(autoincrement())
-  chatId       Int
-  content      String?
-  messageType  MessageType @default(TEXT)
-  mediaUrl     String?     // URL or file path for images/files
-  mediaType    String?     // Type of media (image/png, application/pdf, etc.)
-  metadata     Json?       // Flexible field for future media types and additional data
-  is_belonging_to_user Boolean @default(false)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                   Int         @id @default(autoincrement())
+  chatId               Int
+  content              String?
+  is_belonging_to_user Boolean     @default(false)
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
   // Relationship: One message belongs to one chat
-  chat         Chat        @relation(fields: [chatId], references: [id])
+  chat                 Chat        @relation(fields: [chatId], references: [id])
+  attachment           Attachment?
 }
 
-enum MessageType {
-  TEXT
-  IMAGE
-  FILE
+model Attachment {
+  id        Int      @id @default(autoincrement())
+  messageId Int      @unique
+  content   String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  message   Message  @relation(fields: [messageId], references: [id])
 }

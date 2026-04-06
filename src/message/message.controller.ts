@@ -10,13 +10,9 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @Post()
-  async createMessage(@Body() messageData: { 
-    chatId: number; 
-    content?: string; 
-    messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-    mediaUrl?: string; 
-    mediaType?: string;
-    metadata?: object;
+  async createMessage(@Body() messageData: {
+    chatId: number;
+    content?: string;
   }): Promise<Message> {
     return this.messageService.createMessage(messageData);
   }
@@ -37,13 +33,7 @@ export class MessageController {
   @Put(':id')
   async updateMessage(
     @Param('id', ParseIntPipe) id: number,
-    @Body() messageData: { 
-      content?: string; 
-      messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-      mediaUrl?: string; 
-      mediaType?: string;
-      metadata?: object;
-    }
+    @Body() messageData: { content?: string }
   ): Promise<Message> {
     return this.messageService.updateMessage(id, messageData);
   }

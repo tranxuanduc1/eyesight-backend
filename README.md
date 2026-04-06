@@ -27,6 +27,13 @@
 
 ## Project setup
 
+Docker image 
+```bash
+docker build -t eyesight-backend . &&  docker run -p 3001:3001 --env-file .env eyesight-backend 
+                                              
+```
+
+or
 ```bash
 $ npm install
 ```

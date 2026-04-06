@@ -157,25 +157,21 @@ describe('ChatService', () => {
       });
     });
 
-    it('should add a message with media', async () => {
-      const mockMessage = { id: 1, chatId: 1, messageType: 'IMAGE', mediaUrl: 'http://img.png' };
+    it('should add a message with content', async () => {
+      const mockMessage = { id: 1, chatId: 1, content: 'Hello with content' };
       (mockPrisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
 
       const result = await service.addMessageToChat(1, {
-        messageType: 'IMAGE',
-        mediaUrl: 'http://img.png',
-        mediaType: 'image/png',
+        content: 'Hello with content',
       });
 
       expect(result).toEqual(mockMessage);
       expect(mockPrisma.message.create).toHaveBeenCalledWith({
         data: {
           chatId: 1,
-          messageType: 'IMAGE',
-          mediaUrl: 'http://img.png',
-          mediaType: 'image/png',
+          content: 'Hello with content',
         },
-        include: { chat: { include: { user: true } } },
+        include: { chat: { include: { user: true } }, attachment: true },
       });
     });
   });

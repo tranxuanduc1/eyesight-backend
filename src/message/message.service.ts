@@ -4,22 +4,14 @@ import prisma from '../../lib/db';
 
 @Injectable()
 export class MessageService {
-  async createMessage(data: { 
-    chatId: number; 
-    content?: string; 
-    messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-    mediaUrl?: string; 
-    mediaType?: string;
-    metadata?: object;
+  async createMessage(data: {
+    chatId: number;
+    content?: string;
   }): Promise<Message> {
     return await prisma.message.create({
       data: {
         chatId: data.chatId,
         content: data.content,
-        messageType: data.messageType,
-        mediaUrl: data.mediaUrl,
-        mediaType: data.mediaType,
-        metadata: data.metadata,
       },
       include: {
         chat: {
@@ -27,6 +19,7 @@ export class MessageService {
             user: true,
           },
         },
+        attachment: true,
       },
     });
   }
@@ -40,6 +33,7 @@ export class MessageService {
             user: true,
           },
         },
+        attachment: true,
       },
     });
   }
@@ -53,6 +47,7 @@ export class MessageService {
             user: true,
           },
         },
+        attachment: true,
       },
       orderBy: {
         createdAt: 'asc',
@@ -68,6 +63,7 @@ export class MessageService {
             user: true,
           },
         },
+        attachment: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -75,13 +71,7 @@ export class MessageService {
     });
   }
 
-  async updateMessage(id: number, data: { 
-    content?: string; 
-    messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-    mediaUrl?: string; 
-    mediaType?: string;
-    metadata?: object;
-  }): Promise<Message> {
+  async updateMessage(id: number, data: { content?: string }): Promise<Message> {
     return await prisma.message.update({
       where: { id },
       data,
@@ -91,6 +81,7 @@ export class MessageService {
             user: true,
           },
         },
+        attachment: true,
       },
     });
   }
@@ -104,6 +95,7 @@ export class MessageService {
             user: true,
           },
         },
+        attachment: true,
       },
     });
   }

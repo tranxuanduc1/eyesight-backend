@@ -23,6 +23,9 @@ export class ChatService {
           orderBy: {
             createdAt: 'asc',
           },
+          include: {
+            attachment: true,
+          },
         },
       },
     });
@@ -35,6 +38,9 @@ export class ChatService {
         messages: {
           orderBy: {
             createdAt: 'asc',
+          },
+          include: {
+            attachment: true,
           },
         },
       },
@@ -53,6 +59,9 @@ export class ChatService {
           orderBy: {
             createdAt: 'asc',
           },
+          include: {
+            attachment: true,
+          },
         },
       },
       orderBy: {
@@ -67,7 +76,11 @@ export class ChatService {
       data,
       include: {
         user: true,
-        messages: true,
+        messages: {
+          include: {
+            attachment: true,
+          },
+        },
       },
     });
   }
@@ -77,22 +90,20 @@ export class ChatService {
       where: { id },
       include: {
         user: true,
-        messages: true,
+        messages: {
+          include: {
+            attachment: true,
+          },
+        },
       },
     });
   }
 
-  async addMessageToChat(chatId: number, data: { 
-    content?: string; 
-    messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-    mediaUrl?: string; 
-    mediaType?: string;
-    metadata?: object;
-  }): Promise<Message> {
+  async addMessageToChat(chatId: number, data: { content?: string }): Promise<Message> {
     return await prisma.message.create({
       data: {
         chatId,
-        ...data,
+        content: data.content,
       },
       include: {
         chat: {
@@ -100,6 +111,7 @@ export class ChatService {
             user: true,
           },
         },
+        attachment: true,
       },
     });
   }
@@ -113,6 +125,7 @@ export class ChatService {
             user: true,
           },
         },
+        attachment: true,
       },
       orderBy: {
         createdAt: 'asc',
