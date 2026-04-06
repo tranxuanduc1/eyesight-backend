@@ -105,318 +105,276 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
 
-Now I'll create a comprehensive API documentation for this Eyesight backend project.
-
 # Eyesight Backend API Documentation
 
-This document provides a comprehensive overview of the API endpoints available in the Eyesight backend system. The API is built with NestJS and includes user management, authentication, chat functionality, and messaging capabilities.
-
 ## Base URL
+
 ```
 http://localhost:3001
 ```
 
 ## Authentication
-Most endpoints require authentication using JWT tokens. After logging in, include the token in the Authorization header as follows:
+
+Protected endpoints require a JWT Bearer token. Tokens are valid for **1 day**.
+
 ```
 Authorization: Bearer <access_token>
 ```
 
-## API Endpoints
+---
 
-### Public Routes
+## Public Endpoints
 
-#### Authentication (`/auth`)
+### POST /auth/login
 
-**POST /auth/login**
-- Description: Authenticate a user and return a JWT token
-- Request Body:
-  ```json
-  {
-    "email": "string",
-    "password": "string"
+Authenticate and receive a JWT token.
+
+**Request Body**
+```json
+{
+  "email": "user@example.com",
+  "password": "secret"
+}
+```
+
+**Response**
+```json
+{
+  "access_token": "<jwt>"
+}
+```
+
+### POST /auth/register
+
+Register a new user.
+
+**Request Body**
+```json
+{
+  "email": "user@example.com",
+  "name": "Alice",
+  "password": "secret"
+}
+```
+
+**Response:** Created `User` object.
+
+### GET /
+
+Health check. Returns `"Hello World!"`.
+
+### GET /status
+
+Database connectivity status.
+
+---
+
+## Protected Endpoints
+
+All routes below require `Authorization: Bearer <token>`.
+
+---
+
+### Users `/users`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/users/me` | Authenticated user's profile |
+| GET | `/users` | All users |
+| GET | `/users/:id` | User by ID |
+| GET | `/users/email/:email` | User by email |
+| POST | `/users` | Create a user |
+| PUT | `/users/:id` | Update a user |
+| DELETE | `/users/:id` | Delete a user |
+
+**Create / Update Request Body**
+```json
+{
+  "email": "user@example.com",
+  "name": "Alice",
+  "password": "secret"
+}
+```
+All fields are optional on update. Password is hashed automatically.
+
+---
+
+### Chats `/chats`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/chats` | Create a chat |
+| GET | `/chats` | All chats (desc order) |
+| GET | `/chats/:id` | Chat by ID (with messages) |
+| GET | `/chats/user/:userId` | Chats for a user |
+| PUT | `/chats/:id` | Update chat title |
+| DELETE | `/chats/:id` | Delete a chat |
+| POST | `/chats/:id/messages` | Add a message to a chat |
+| GET | `/chats/:id/messages` | Messages in a chat (asc order) |
+
+**Create Chat Request Body**
+```json
+{
+  "userId": 1,
+  "title": "Consultation #1"
+}
+```
+
+**Add Message to Chat Request Body**
+```json
+{
+  "content": "Hello"
+}
+```
+
+---
+
+### Messages `/messages`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/messages` | Create a message |
+| GET | `/messages` | All messages (filter by `?chatId=<id>`) |
+| GET | `/messages/:id` | Message by ID |
+| PUT | `/messages/:id` | Update message content |
+| DELETE | `/messages/:id` | Delete a message |
+
+**Create Message Request Body**
+```json
+{
+  "chatId": 1,
+  "content": "Hello"
+}
+```
+
+---
+
+### Chatbot `/chatbot/message` — SSE Streaming
+
+Send a fundus image with patient metadata and stream an AI analysis response.
+
+**Method:** `POST /chatbot/message`  
+**Content-Type:** `multipart/form-data`  
+**Response:** `text/event-stream` (Server-Sent Events)
+
+**Form Fields**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `chat_id` | string (integer) | Yes | ID of an existing chat owned by the user |
+| `prompt` | string | Yes | User's question or instruction |
+| `age` | string (number) | No | Patient age |
+| `gender` | string | No | Patient gender |
+| `fundus_right` | File | No | Right eye fundus image |
+| `fundus_left` | File | No | Left eye fundus image |
+
+**SSE Event Types**
+
+Each event is a JSON line: `data: <json>\n\n`
+
+| Event `type` | When | Payload |
+|---|---|---|
+| `dr_result` | After DR model returns | `{ type, data: { prediction, label, route, raw_outputs } }` |
+| `ocular_result` | After Ocular model returns | `{ type, data: { prediction, label, raw_outputs } }` |
+| `delta` | LLM token stream | `{ type, delta: "<token>" }` |
+| `error` | Any error during processing | `{ type, message: "<error>" }` |
+| `done` | Stream complete | `{ type }` |
+
+Stream ends with a `[DONE]` sentinel line.
+
+**Example client (fetch)**
+```js
+const form = new FormData();
+form.append('chat_id', '42');
+form.append('prompt', 'What does this fundus image show?');
+form.append('fundus_right', imageFile);
+
+const res = await fetch('http://localhost:3001/chatbot/message', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  body: form,
+});
+
+const reader = res.body.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  const lines = decoder.decode(value).split('\n');
+  for (const line of lines) {
+    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+      const event = JSON.parse(line.slice(6));
+      console.log(event);
+    }
   }
-  ```
-- Response:
-  ```json
-  {
-    "access_token": "string"
-  }
-  ```
-- Status Codes:
-  - 200: Successful login
-  - 401: Invalid credentials
+}
+```
 
-**POST /auth/register**
-- Description: Register a new user
-- Request Body:
-  ```json
-  {
-    "email": "string",
-    "name": "string",
-    "password": "string"
-  }
-  ```
-- Response: Returns the created user object
-- Status Codes:
-  - 200: Successfully registered
-  - 401: Email already in use
-
-#### Application Information ([/](file:///home/duc/Work/eyesight/backend/Dockerfile))
-
-**GET /**
-- Description: Get a welcome message
-- Response: `"Hello World!"`
-
-**GET /status**
-- Description: Check database connection status
-- Response: Status message indicating database connectivity
-
-### Protected Routes (Require JWT Authentication)
-
-#### Users (`/users`)
-
-**POST /users**
-- Description: Create a new user
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "email": "string",
-    "name": "string",
-    "password": "string"
-  }
-  ```
-- Response: Created user object
-- Status Codes:
-  - 201: User created successfully
-
-**GET /users/me**
-- Description: Get the authenticated user's profile
-- Headers: `Authorization: Bearer <token>`
-- Response: User object with their details
-
-**GET /users/:id**
-- Description: Get a user by ID
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: User object
-
-**GET /users/email/:email**
-- Description: Get a user by email
-- Parameters: `email` (string)
-- Headers: `Authorization: Bearer <token>`
-- Response: User object
-
-**GET /users**
-- Description: Get all users
-- Headers: `Authorization: Bearer <token>`
-- Response: Array of user objects
-
-**PUT /users/:id**
-- Description: Update a user
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "email": "string",
-    "name": "string",
-    "password": "string"
-  }
-  ```
-- Response: Updated user object
-
-**DELETE /users/:id**
-- Description: Delete a user
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Deleted user object
-
-#### Chats (`/chats`)
-
-**POST /chats**
-- Description: Create a new chat
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "userId": 1,
-    "title": "string (optional)"
-  }
-  ```
-- Response: Created chat object
-
-**GET /chats/:id**
-- Description: Get a chat by ID
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Chat object
-
-**GET /chats**
-- Description: Get all chats
-- Headers: `Authorization: Bearer <token>`
-- Response: Array of chat objects
-
-**GET /chats/user/:userId**
-- Description: Get all chats for a specific user
-- Parameters: `userId` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Array of chat objects
-
-**PUT /chats/:id**
-- Description: Update a chat
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "title": "string"
-  }
-  ```
-- Response: Updated chat object
-
-**DELETE /chats/:id**
-- Description: Delete a chat
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Deleted chat object
-
-**POST /chats/:id/messages**
-- Description: Add a message to a chat
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "content": "string (optional)",
-    "messageType": "TEXT | IMAGE | FILE",
-    "mediaUrl": "string (optional)",
-    "mediaType": "string (optional)",
-    "metadata": "object (optional)"
-  }
-  ```
-- Response: Created message object
-
-**GET /chats/:id/messages**
-- Description: Get all messages for a specific chat
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Array of message objects
-
-#### Messages (`/messages`)
-
-**POST /messages**
-- Description: Create a new message
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "chatId": 1,
-    "content": "string (optional)",
-    "messageType": "TEXT | IMAGE | FILE",
-    "mediaUrl": "string (optional)",
-    "mediaType": "string (optional)",
-    "metadata": "object (optional)"
-  }
-  ```
-- Response: Created message object
-
-**GET /messages/:id**
-- Description: Get a message by ID
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Message object
-
-**GET /messages**
-- Description: Get all messages or messages for a specific chat
-- Headers: `Authorization: Bearer <token>`
-- Query Parameters: `chatId` (number, optional)
-- Response: Array of message objects
-
-**PUT /messages/:id**
-- Description: Update a message
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "content": "string (optional)",
-    "messageType": "TEXT | IMAGE | FILE",
-    "mediaUrl": "string (optional)",
-    "mediaType": "string (optional)",
-    "metadata": "object (optional)"
-  }
-  ```
-- Response: Updated message object
-
-**DELETE /messages/:id**
-- Description: Delete a message
-- Parameters: `id` (number)
-- Headers: `Authorization: Bearer <token>`
-- Response: Deleted message object
-
-#### Chatbot (`/chatbot`)
-
-**POST /chatbot**
-- Description: Create a chat with the chatbot
-- Headers: `Authorization: Bearer <token>`
-- Request Body:
-  ```json
-  {
-    "question": "string"
-  }
-  ```
-- Response: Object with response from the chatbot
+---
 
 ## Data Models
 
 ### User
-- `id`: number (auto-generated)
-- `email`: string (unique)
-- `name`: string (optional)
-- `password`: string (hashed)
-- `createdAt`: timestamp
-- `updatedAt`: timestamp
-- `chats`: array of Chat objects
+| Field | Type |
+|-------|------|
+| `id` | number |
+| `email` | string (unique) |
+| `name` | string \| null |
+| `password` | string (bcrypt hash) |
+| `createdAt` | timestamp |
+| `updatedAt` | timestamp |
+| `chats` | Chat[] |
 
 ### Chat
-- `id`: number (auto-generated)
-- `userId`: number (foreign key to User)
-- `title`: string (optional)
-- `createdAt`: timestamp
-- `updatedAt`: timestamp
-- `user`: User object
-- `messages`: array of Message objects
+| Field | Type |
+|-------|------|
+| `id` | number |
+| `userId` | number |
+| `title` | string \| null |
+| `createdAt` | timestamp |
+| `updatedAt` | timestamp |
+| `user` | User |
+| `messages` | Message[] |
 
 ### Message
-- `id`: number (auto-generated)
-- `chatId`: number (foreign key to Chat)
-- `content`: string (optional)
-- `messageType`: enum ('TEXT', 'IMAGE', 'FILE')
-- `mediaUrl`: string (optional)
-- `mediaType`: string (optional)
-- `metadata`: JSON object (optional)
-- `createdAt`: timestamp
-- `updatedAt`: timestamp
-- `chat`: Chat object
+| Field | Type |
+|-------|------|
+| `id` | number |
+| `chatId` | number |
+| `content` | string \| null |
+| `is_belonging_to_user` | boolean |
+| `createdAt` | timestamp |
+| `updatedAt` | timestamp |
+| `chat` | Chat |
+| `attachment` | Attachment \| null |
 
-## Error Handling
+### Attachment
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | |
+| `messageId` | number (1:1 with Message) | |
+| `content` | string \| null | JSON string of model results or patient info |
+| `image` | string \| null | Comma-separated file paths of fundus images |
+| `createdAt` | timestamp | |
+| `updatedAt` | timestamp | |
 
-The API returns appropriate HTTP status codes:
-- 200: Success
-- 201: Created
-- 400: Bad Request
-- 401: Unauthorized
-- 404: Not Found
-- 500: Internal Server Error
+---
 
-Error responses typically include a descriptive message explaining the issue.
+## Error Responses
 
-## Security Considerations
+| Status | Meaning |
+|--------|---------|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad Request (validation error) |
+| 401 | Unauthorized (missing/invalid token or wrong credentials) |
+| 404 | Not Found |
+| 500 | Internal Server Error |
 
-- All sensitive routes are protected with JWT authentication
-- Passwords are hashed using bcrypt
-- User passwords are never returned in API responses
-- Authentication tokens must be included in requests to protected endpoints
+---
+
+## CORS
+
+Allowed origins: `http://localhost:3000`, `http://0.0.0.0:3000`, `https://eyesight.app`, `https://admin.eyesight.app`. Credentials are enabled.
 
