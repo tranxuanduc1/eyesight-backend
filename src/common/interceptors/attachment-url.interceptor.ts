@@ -11,6 +11,9 @@ function transformImageUrls(data: any, baseUrl: string): any {
   if (Array.isArray(data)) {
     return data.map((item) => transformImageUrls(item, baseUrl));
   }
+  if (data instanceof Date) {
+    return data.toISOString();
+  }
   if (data && typeof data === 'object') {
     const result: Record<string, any> = {};
     for (const key of Object.keys(data)) {
