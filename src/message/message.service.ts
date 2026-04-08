@@ -1,102 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { Message } from '../../generated/prisma/client';
-import prisma from '../../lib/db';
+import { MessageRepository } from './message.repository';
 
 @Injectable()
 export class MessageService {
-  async createMessage(data: {
-    chatId: number;
-    content?: string;
-  }): Promise<Message> {
-    return await prisma.message.create({
-      data: {
-        chatId: data.chatId,
-        content: data.content,
-      },
-      include: {
-        chat: {
-          include: {
-            user: true,
-          },
-        },
-        attachments: true,
-      },
-    });
+  constructor(private readonly messageRepository: MessageRepository) {}
+
+  async createMessage(data: { chatId: number; content?: string }): Promise<Message> {
+    return this.messageRepository.create(data.chatId, data.content);
   }
 
   async getMessageById(id: number): Promise<Message | null> {
-    return await prisma.message.findUnique({
-      where: { id },
-      include: {
-        chat: {
-          include: {
-            user: true,
-          },
-        },
-        attachments: true,
-      },
-    });
+    return this.messageRepository.findById(id);
   }
 
   async getMessagesByChatId(chatId: number): Promise<Message[]> {
-    return await prisma.message.findMany({
-      where: { chatId },
-      include: {
-        chat: {
-          include: {
-            user: true,
-          },
-        },
-        attachments: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+    return this.messageRepository.findByChatId(chatId);
   }
 
   async getAllMessages(): Promise<Message[]> {
-    return await prisma.message.findMany({
-      include: {
-        chat: {
-          include: {
-            user: true,
-          },
-        },
-        attachments: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    return this.messageRepository.findAll();
   }
 
   async updateMessage(id: number, data: { content?: string }): Promise<Message> {
-    return await prisma.message.update({
-      where: { id },
-      data,
-      include: {
-        chat: {
-          include: {
-            user: true,
-          },
-        },
-        attachments: true,
-      },
-    });
+    return this.messageRepository.update(id, data);
   }
 
   async deleteMessage(id: number): Promise<Message> {
-    return await prisma.message.delete({
-      where: { id },
-      include: {
-        chat: {
-          include: {
-            user: true,
-          },
-        },
-        attachments: true,
-      },
-    });
+    return this.messageRepository.delete(id);
   }
 }

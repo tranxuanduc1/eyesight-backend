@@ -2,6 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AttachmentRepository } from './attachment.repository';
 import { CreateAttachmentDto } from './dto/create-attachment.dto';
 import { UpdateAttachmentDto } from './dto/update-attachment.dto';
+import type { PrismaClient } from '../../generated/prisma/client';
+
+type PrismaTx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
 @Injectable()
 export class AttachmentService {
@@ -37,5 +40,9 @@ export class AttachmentService {
 
   deleteAttachment(id: number) {
     return this.attachmentRepository.delete(id);
+  }
+
+  createWithTx(tx: PrismaTx, messageId: number, data: { content?: string; image?: string }) {
+    return this.attachmentRepository.createWithTx(tx, messageId, data);
   }
 }

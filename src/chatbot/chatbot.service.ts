@@ -1,17 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs/promises';
-import * as path from 'path';
 import prisma from '../../lib/db';
-import type { PrismaClient } from '../../generated/prisma/client';
 import { DrService } from './services/dr.service';
 import type { DRResult } from './services/dr.service';
 import { OcularService } from './services/ocular.service';
 import type { OcularResult } from './services/ocular.service';
 import { LlmService } from './services/llm.service';
 import type { LLMMessage } from './services/llm.service';
-import { AttachmentRepository } from '../attachment/attachment.repository';
-
-type PrismaTx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
+import { AttachmentService } from '../attachment/attachment.service';
+import { MessageRepository } from '../message/message.repository';
+import { ImageStorageService } from './services/image-storage.service';
 
 @Injectable()
 export class ChatbotService {
@@ -19,7 +17,9 @@ export class ChatbotService {
     private readonly drService: DrService,
     private readonly ocularService: OcularService,
     private readonly llmService: LlmService,
-    private readonly attachmentRepository: AttachmentRepository,
+    private readonly attachmentService: AttachmentService,
+    private readonly messageRepository: MessageRepository,
+    private readonly imageStorageService: ImageStorageService,
   ) {}
 
   async *processMessage(params: {
@@ -41,7 +41,7 @@ export class ChatbotService {
     }
 
     // 2. Load existing messages for LLM context
-    const existingMessages = await this.getMessages(params.chatId);
+    const existingMessages = await this.messageRepository.findByChatId(params.chatId);
 
     // --- Phase 1: write fundus images to disk ---
     const writtenPaths: string[] = [];
@@ -49,12 +49,12 @@ export class ChatbotService {
 
     try {
       if (params.leftEye) {
-        const tmpPath = await this.storeImageTemp(params.leftEye, params.chatId, 'left');
+        const tmpPath = await this.imageStorageService.storeImageTemp(params.leftEye, params.chatId, 'left');
         writtenPaths.push(tmpPath);
         imagePaths.left = tmpPath;
       }
       if (params.rightEye) {
-        const tmpPath = await this.storeImageTemp(params.rightEye, params.chatId, 'right');
+        const tmpPath = await this.imageStorageService.storeImageTemp(params.rightEye, params.chatId, 'right');
         writtenPaths.push(tmpPath);
         imagePaths.right = tmpPath;
       }
@@ -67,25 +67,23 @@ export class ChatbotService {
     let userMessageId: number;
     try {
       const result = await prisma.$transaction(async (tx) => {
-        const userMsg = await this.saveMessage(tx, params.chatId, params.prompt, true);
+        const userMsg = await this.messageRepository.createWithTx(tx, params.chatId, params.prompt, true);
 
         // Attachment 1: patient info (JSON) if provided
         if (hasInfo) {
-          await this.attachmentRepository.createWithTx(tx, userMsg.id, {
+          await this.attachmentService.createWithTx(tx, userMsg.id, {
             content: JSON.stringify({ age: params.age, gender: params.gender }),
           });
         }
 
         // Attachment 2: left fundus image if provided
         if (imagePaths.left) {
-          await this.attachmentRepository.createWithTx(tx, userMsg.id, { image: imagePaths.left });
+          await this.attachmentService.createWithTx(tx, userMsg.id, { image: imagePaths.left });
         }
 
         // Attachment 3: right fundus image if provided
         if (imagePaths.right) {
-          await this.attachmentRepository.createWithTx(tx, userMsg.id, {
-            image: imagePaths.right,
-          });
+          await this.attachmentService.createWithTx(tx, userMsg.id, { image: imagePaths.right });
         }
 
         return userMsg;
@@ -139,10 +137,24 @@ export class ChatbotService {
     }
 
     // --- Phase 3b: stream LLM response ---
-    const llmMessages: LLMMessage[] = existingMessages.map((msg) => ({
-      role: msg.is_belonging_to_user ? 'user' : 'assistant',
-      content: msg.content ?? '',
-    }));
+    const llmMessages: LLMMessage[] = existingMessages.map((msg) => {
+      let content = msg.content ?? '';
+
+      // For assistant messages, append the label from each JSON attachment that has one
+      if (!msg.is_belonging_to_user && msg.attachments.length > 0) {
+        for (const attachment of msg.attachments) {
+          if (!attachment.content) continue;
+          try {
+            const parsed = JSON.parse(attachment.content) as { label?: string };
+            if (parsed.label) content += `\n[label: ${parsed.label}]`;
+          } catch {
+            // skip malformed JSON attachments
+          }
+        }
+      }
+
+      return { role: msg.is_belonging_to_user ? 'user' : 'assistant', content };
+    });
     llmMessages.push({ role: 'user', content: userMessageContent });
 
     let fullResponse = '';
@@ -160,18 +172,18 @@ export class ChatbotService {
     // --- Phase 4: save LLM response + model result attachments ---
     if (fullResponse) {
       await prisma.$transaction(async (tx) => {
-        const sysMsg = await this.saveMessage(tx, params.chatId, fullResponse, false);
+        const sysMsg = await this.messageRepository.createWithTx(tx, params.chatId, fullResponse, false);
 
         // Attachment: DR result (JSON) if DR was called
         if (drResult) {
-          await this.attachmentRepository.createWithTx(tx, sysMsg.id, {
+          await this.attachmentService.createWithTx(tx, sysMsg.id, {
             content: JSON.stringify(drResult),
           });
         }
 
         // Attachment: Ocular result (JSON) if Ocular was called
         if (ocularResult) {
-          await this.attachmentRepository.createWithTx(tx, sysMsg.id, {
+          await this.attachmentService.createWithTx(tx, sysMsg.id, {
             content: JSON.stringify(ocularResult),
           });
         }
@@ -179,32 +191,5 @@ export class ChatbotService {
     }
 
     yield { type: 'done' };
-  }
-
-  private async storeImageTemp(
-    file: Express.Multer.File,
-    chatId: number,
-    side: 'left' | 'right',
-  ): Promise<string> {
-    const ext = file.originalname.split('.').pop() ?? 'jpg';
-    const filename = `${chatId}_${side}_${Date.now()}.${ext}`;
-    const dir = path.join(process.cwd(), 'uploads', 'fundus');
-    await fs.mkdir(dir, { recursive: true });
-    const fullPath = path.join(dir, filename);
-    await fs.writeFile(fullPath, file.buffer);
-    return path.join('uploads', 'fundus', filename);
-  }
-
-  private async getMessages(chatId: number) {
-    return prisma.message.findMany({
-      where: { chatId },
-      orderBy: { createdAt: 'asc' },
-    });
-  }
-
-  private async saveMessage(tx: PrismaTx, chatId: number, content: string, isUser: boolean) {
-    return tx.message.create({
-      data: { chatId, content, is_belonging_to_user: isUser },
-    });
   }
 }
