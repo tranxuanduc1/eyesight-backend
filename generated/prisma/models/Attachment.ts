@@ -243,16 +243,16 @@ export type AttachmentOrderByWithRelationInput = {
 
 export type AttachmentWhereUniqueInput = Prisma.AtLeast<{
   id?: number
-  messageId?: number
   AND?: Prisma.AttachmentWhereInput | Prisma.AttachmentWhereInput[]
   OR?: Prisma.AttachmentWhereInput[]
   NOT?: Prisma.AttachmentWhereInput | Prisma.AttachmentWhereInput[]
+  messageId?: Prisma.IntFilter<"Attachment"> | number
   content?: Prisma.StringNullableFilter<"Attachment"> | string | null
   image?: Prisma.StringNullableFilter<"Attachment"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
   message?: Prisma.XOR<Prisma.MessageScalarRelationFilter, Prisma.MessageWhereInput>
-}, "id" | "messageId">
+}, "id">
 
 export type AttachmentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -285,7 +285,7 @@ export type AttachmentCreateInput = {
   image?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  message: Prisma.MessageCreateNestedOneWithoutAttachmentInput
+  message: Prisma.MessageCreateNestedOneWithoutAttachmentsInput
 }
 
 export type AttachmentUncheckedCreateInput = {
@@ -302,7 +302,7 @@ export type AttachmentUpdateInput = {
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  message?: Prisma.MessageUpdateOneRequiredWithoutAttachmentNestedInput
+  message?: Prisma.MessageUpdateOneRequiredWithoutAttachmentsNestedInput
 }
 
 export type AttachmentUncheckedUpdateInput = {
@@ -339,9 +339,14 @@ export type AttachmentUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type AttachmentNullableScalarRelationFilter = {
-  is?: Prisma.AttachmentWhereInput | null
-  isNot?: Prisma.AttachmentWhereInput | null
+export type AttachmentListRelationFilter = {
+  every?: Prisma.AttachmentWhereInput
+  some?: Prisma.AttachmentWhereInput
+  none?: Prisma.AttachmentWhereInput
+}
+
+export type AttachmentOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type AttachmentCountOrderByAggregateInput = {
@@ -381,36 +386,46 @@ export type AttachmentSumOrderByAggregateInput = {
   messageId?: Prisma.SortOrder
 }
 
-export type AttachmentCreateNestedOneWithoutMessageInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput
-  connect?: Prisma.AttachmentWhereUniqueInput
+export type AttachmentCreateNestedManyWithoutMessageInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput> | Prisma.AttachmentCreateWithoutMessageInput[] | Prisma.AttachmentUncheckedCreateWithoutMessageInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput | Prisma.AttachmentCreateOrConnectWithoutMessageInput[]
+  createMany?: Prisma.AttachmentCreateManyMessageInputEnvelope
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
 }
 
-export type AttachmentUncheckedCreateNestedOneWithoutMessageInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput
-  connect?: Prisma.AttachmentWhereUniqueInput
+export type AttachmentUncheckedCreateNestedManyWithoutMessageInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput> | Prisma.AttachmentCreateWithoutMessageInput[] | Prisma.AttachmentUncheckedCreateWithoutMessageInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput | Prisma.AttachmentCreateOrConnectWithoutMessageInput[]
+  createMany?: Prisma.AttachmentCreateManyMessageInputEnvelope
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
 }
 
-export type AttachmentUpdateOneWithoutMessageNestedInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput
-  upsert?: Prisma.AttachmentUpsertWithoutMessageInput
-  disconnect?: Prisma.AttachmentWhereInput | boolean
-  delete?: Prisma.AttachmentWhereInput | boolean
-  connect?: Prisma.AttachmentWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.AttachmentUpdateToOneWithWhereWithoutMessageInput, Prisma.AttachmentUpdateWithoutMessageInput>, Prisma.AttachmentUncheckedUpdateWithoutMessageInput>
+export type AttachmentUpdateManyWithoutMessageNestedInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput> | Prisma.AttachmentCreateWithoutMessageInput[] | Prisma.AttachmentUncheckedCreateWithoutMessageInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput | Prisma.AttachmentCreateOrConnectWithoutMessageInput[]
+  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutMessageInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutMessageInput[]
+  createMany?: Prisma.AttachmentCreateManyMessageInputEnvelope
+  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutMessageInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutMessageInput[]
+  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutMessageInput | Prisma.AttachmentUpdateManyWithWhereWithoutMessageInput[]
+  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
 }
 
-export type AttachmentUncheckedUpdateOneWithoutMessageNestedInput = {
-  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
-  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput
-  upsert?: Prisma.AttachmentUpsertWithoutMessageInput
-  disconnect?: Prisma.AttachmentWhereInput | boolean
-  delete?: Prisma.AttachmentWhereInput | boolean
-  connect?: Prisma.AttachmentWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.AttachmentUpdateToOneWithWhereWithoutMessageInput, Prisma.AttachmentUpdateWithoutMessageInput>, Prisma.AttachmentUncheckedUpdateWithoutMessageInput>
+export type AttachmentUncheckedUpdateManyWithoutMessageNestedInput = {
+  create?: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput> | Prisma.AttachmentCreateWithoutMessageInput[] | Prisma.AttachmentUncheckedCreateWithoutMessageInput[]
+  connectOrCreate?: Prisma.AttachmentCreateOrConnectWithoutMessageInput | Prisma.AttachmentCreateOrConnectWithoutMessageInput[]
+  upsert?: Prisma.AttachmentUpsertWithWhereUniqueWithoutMessageInput | Prisma.AttachmentUpsertWithWhereUniqueWithoutMessageInput[]
+  createMany?: Prisma.AttachmentCreateManyMessageInputEnvelope
+  set?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  disconnect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  delete?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  connect?: Prisma.AttachmentWhereUniqueInput | Prisma.AttachmentWhereUniqueInput[]
+  update?: Prisma.AttachmentUpdateWithWhereUniqueWithoutMessageInput | Prisma.AttachmentUpdateWithWhereUniqueWithoutMessageInput[]
+  updateMany?: Prisma.AttachmentUpdateManyWithWhereWithoutMessageInput | Prisma.AttachmentUpdateManyWithWhereWithoutMessageInput[]
+  deleteMany?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
 }
 
 export type AttachmentCreateWithoutMessageInput = {
@@ -433,15 +448,45 @@ export type AttachmentCreateOrConnectWithoutMessageInput = {
   create: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
 }
 
-export type AttachmentUpsertWithoutMessageInput = {
-  update: Prisma.XOR<Prisma.AttachmentUpdateWithoutMessageInput, Prisma.AttachmentUncheckedUpdateWithoutMessageInput>
-  create: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
-  where?: Prisma.AttachmentWhereInput
+export type AttachmentCreateManyMessageInputEnvelope = {
+  data: Prisma.AttachmentCreateManyMessageInput | Prisma.AttachmentCreateManyMessageInput[]
+  skipDuplicates?: boolean
 }
 
-export type AttachmentUpdateToOneWithWhereWithoutMessageInput = {
-  where?: Prisma.AttachmentWhereInput
+export type AttachmentUpsertWithWhereUniqueWithoutMessageInput = {
+  where: Prisma.AttachmentWhereUniqueInput
+  update: Prisma.XOR<Prisma.AttachmentUpdateWithoutMessageInput, Prisma.AttachmentUncheckedUpdateWithoutMessageInput>
+  create: Prisma.XOR<Prisma.AttachmentCreateWithoutMessageInput, Prisma.AttachmentUncheckedCreateWithoutMessageInput>
+}
+
+export type AttachmentUpdateWithWhereUniqueWithoutMessageInput = {
+  where: Prisma.AttachmentWhereUniqueInput
   data: Prisma.XOR<Prisma.AttachmentUpdateWithoutMessageInput, Prisma.AttachmentUncheckedUpdateWithoutMessageInput>
+}
+
+export type AttachmentUpdateManyWithWhereWithoutMessageInput = {
+  where: Prisma.AttachmentScalarWhereInput
+  data: Prisma.XOR<Prisma.AttachmentUpdateManyMutationInput, Prisma.AttachmentUncheckedUpdateManyWithoutMessageInput>
+}
+
+export type AttachmentScalarWhereInput = {
+  AND?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
+  OR?: Prisma.AttachmentScalarWhereInput[]
+  NOT?: Prisma.AttachmentScalarWhereInput | Prisma.AttachmentScalarWhereInput[]
+  id?: Prisma.IntFilter<"Attachment"> | number
+  messageId?: Prisma.IntFilter<"Attachment"> | number
+  content?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  image?: Prisma.StringNullableFilter<"Attachment"> | string | null
+  createdAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Attachment"> | Date | string
+}
+
+export type AttachmentCreateManyMessageInput = {
+  id?: number
+  content?: string | null
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type AttachmentUpdateWithoutMessageInput = {
@@ -452,6 +497,14 @@ export type AttachmentUpdateWithoutMessageInput = {
 }
 
 export type AttachmentUncheckedUpdateWithoutMessageInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttachmentUncheckedUpdateManyWithoutMessageInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   content?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null

@@ -48,13 +48,13 @@ model Message {
   updatedAt            DateTime    @updatedAt
 
   // Relationship: One message belongs to one chat
-  chat                 Chat        @relation(fields: [chatId], references: [id])
-  attachment           Attachment?
+  chat                 Chat         @relation(fields: [chatId], references: [id])
+  attachments          Attachment[]
 }
 
 model Attachment {
   id        Int      @id @default(autoincrement())
-  messageId Int      @unique
+  messageId Int
   content   String?
   image     String?
   createdAt DateTime @default(now())

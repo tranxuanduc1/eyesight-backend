@@ -12,6 +12,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { ChatbotService } from './chatbot.service';
 import { JwtAuthGuard } from '../auth/jwt.guard';
+import { ChatbotMessageDto } from './dto/chatbot-message.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('chatbot')
@@ -28,21 +29,19 @@ export class ChatbotController {
   async message(
     @UploadedFiles()
     files: { fundus_right?: Express.Multer.File[]; fundus_left?: Express.Multer.File[] },
-    @Body()
-    body: { chat_id: string; prompt: string; age?: string; gender?: string },
+    @Body() body: ChatbotMessageDto,
     @Req() req: any,
     @Res() res: Response,
   ) {
-    // Pre-SSE validation: return JSON errors before setting SSE headers
-    if (!body.chat_id) {
-      return res.status(400).json({ message: 'chat_id is required', error: 'Bad Request', statusCode: 400 });
-    }
-    const chatId = parseInt(body.chat_id, 10);
-    if (isNaN(chatId)) {
-      return res.status(400).json({ message: 'chat_id must be a number', error: 'Bad Request', statusCode: 400 });
-    }
-    if (!body.prompt) {
-      return res.status(400).json({ message: 'prompt is required', error: 'Bad Request', statusCode: 400 });
+    // Pre-SSE validation: info patient without images is invalid
+    const hasImages = !!(files?.fundus_right?.[0] || files?.fundus_left?.[0]);
+    const hasInfo = body.age !== undefined || !!body.gender;
+    if (hasInfo && !hasImages) {
+      return res.status(400).json({
+        message: 'Patient info (age/gender) requires at least one fundus image',
+        error: 'Bad Request',
+        statusCode: 400,
+      });
     }
 
     res.setHeader('Content-Type', 'text/event-stream');
@@ -50,16 +49,15 @@ export class ChatbotController {
     res.setHeader('Connection', 'keep-alive');
 
     const userId: number = req.user.userId;
-    const age = body.age ? parseFloat(body.age) : undefined;
 
     try {
       const generator = this.chatbotService.processMessage({
         userId,
-        chatId,
+        chatId: body.chat_id,
         prompt: body.prompt,
         rightEye: files?.fundus_right?.[0],
         leftEye: files?.fundus_left?.[0],
-        age,
+        age: body.age,
         gender: body.gender,
       });
 

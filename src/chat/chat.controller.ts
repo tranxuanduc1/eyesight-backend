@@ -1,57 +1,67 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ChatService } from './chat.service';
-import { Chat, Message } from '../../generated/prisma/client';
+import {
+  Controller, Get, Post, Put, Delete,
+  Body, Param, ParseIntPipe, HttpCode, HttpStatus,
+} from '@nestjs/common';
 import { UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt.guard';
+import { CreateChatDto } from './dto/create-chat.dto';
+import { UpdateChatDto } from './dto/update-chat.dto';
+import { AddMessageDto } from './dto/add-message.dto';
 
+@ApiTags('chats')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('chats')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Post()
-  async createChat(@Body() chatData: { userId: number; title?: string }): Promise<Chat> {
-    return this.chatService.createChat(chatData);
+  @HttpCode(HttpStatus.CREATED)
+  createChat(@Body() dto: CreateChatDto) {
+    return this.chatService.createChat(dto);
   }
 
   @Get(':id')
-  async getChatById(@Param('id', ParseIntPipe) id: number): Promise<Chat | null> {
+  getChatById(@Param('id', ParseIntPipe) id: number) {
     return this.chatService.getChatById(id);
   }
 
   @Get()
-  async getAllChats(): Promise<Chat[]> {
+  getAllChats() {
     return this.chatService.getAllChats();
   }
 
   @Get('user/:userId')
-  async getChatsByUserId(@Param('userId', ParseIntPipe) userId: number): Promise<Chat[]> {
+  getChatsByUserId(@Param('userId', ParseIntPipe) userId: number) {
     return this.chatService.getChatsByUserId(userId);
   }
 
   @Put(':id')
-  async updateChat(
+  updateChat(
     @Param('id', ParseIntPipe) id: number,
-    @Body() chatData: { title?: string }
-  ): Promise<Chat> {
-    return this.chatService.updateChat(id, chatData);
+    @Body() dto: UpdateChatDto,
+  ) {
+    return this.chatService.updateChat(id, dto);
   }
 
   @Delete(':id')
-  async deleteChat(@Param('id', ParseIntPipe) id: number): Promise<Chat> {
+  deleteChat(@Param('id', ParseIntPipe) id: number) {
     return this.chatService.deleteChat(id);
   }
 
   @Post(':id/messages')
-  async addMessageToChat(
+  @HttpCode(HttpStatus.CREATED)
+  addMessageToChat(
     @Param('id', ParseIntPipe) chatId: number,
-    @Body() messageData: { content?: string }
-  ): Promise<Message> {
-    return this.chatService.addMessageToChat(chatId, messageData);
+    @Body() dto: AddMessageDto,
+  ) {
+    return this.chatService.addMessageToChat(chatId, dto);
   }
 
   @Get(':id/messages')
-  async getMessagesByChatId(@Param('id', ParseIntPipe) chatId: number): Promise<Message[]> {
+  getMessagesByChatId(@Param('id', ParseIntPipe) chatId: number) {
     return this.chatService.getMessagesByChatId(chatId);
   }
 }

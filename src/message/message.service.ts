@@ -19,7 +19,7 @@ export class MessageService {
             user: true,
           },
         },
-        attachment: true,
+        attachments: true,
       },
     });
   }
@@ -33,7 +33,7 @@ export class MessageService {
             user: true,
           },
         },
-        attachment: true,
+        attachments: true,
       },
     });
   }
@@ -47,7 +47,7 @@ export class MessageService {
             user: true,
           },
         },
-        attachment: true,
+        attachments: true,
       },
       orderBy: {
         createdAt: 'asc',
@@ -63,7 +63,7 @@ export class MessageService {
             user: true,
           },
         },
-        attachment: true,
+        attachments: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -81,7 +81,7 @@ export class MessageService {
             user: true,
           },
         },
-        attachment: true,
+        attachments: true,
       },
     });
   }
@@ -95,7 +95,7 @@ export class MessageService {
             user: true,
           },
         },
-        attachment: true,
+        attachments: true,
       },
     });
   }
