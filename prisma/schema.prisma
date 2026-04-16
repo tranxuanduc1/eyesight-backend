@@ -39,7 +39,7 @@ model Chat {
   updatedAt DateTime  @updatedAt
 
   // Relationship: One chat belongs to one user
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Relationship: One chat can have many messages
   messages  Message[]
@@ -54,7 +54,7 @@ model Message {
   updatedAt            DateTime    @updatedAt
 
   // Relationship: One message belongs to one chat
-  chat                 Chat         @relation(fields: [chatId], references: [id])
+  chat                 Chat         @relation(fields: [chatId], references: [id], onDelete: Cascade)
   attachments          Attachment[]
 }
 
@@ -66,5 +66,5 @@ model Attachment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  message   Message  @relation(fields: [messageId], references: [id])
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
 }

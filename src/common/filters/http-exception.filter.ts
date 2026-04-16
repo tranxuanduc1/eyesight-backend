@@ -25,6 +25,7 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       }
     } else {
       message = 'Internal server error';
+      console.error('[Unhandled Exception]', exception);
     }
 
     response.status(status).json({

@@ -1,5 +1,5 @@
 // src/user/user.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, Req, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req, Query, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '../../generated/prisma/client';
 
@@ -7,6 +7,7 @@ import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { OwnerOrAdminGuard } from '../auth/owner-or-admin.guard';
 import { Interval } from '../common/analytics.helper';
 
 @UseGuards(JwtAuthGuard)
@@ -63,14 +64,16 @@ export class UserController {
     return this.userService.getAllUsers();
   }
 
-  @Put(':id')
+  @UseGuards(OwnerOrAdminGuard)
+  @Patch(':id')
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
-    @Body() userData: { email?: string; name?: string; password?: string }
+    @Body() userData: { email?: string; name?: string; password?: string },
   ): Promise<User> {
     return this.userService.updateUser(id, userData);
   }
 
+  @UseGuards(OwnerOrAdminGuard)
   @Delete(':id')
   async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
     return this.userService.deleteUser(id);

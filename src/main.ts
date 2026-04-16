@@ -10,6 +10,7 @@ import { AttachmentUrlInterceptor } from './common/interceptors/attachment-url.i
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.set('strict routing', false);
   app.useStaticAssets(path.join(process.cwd(), 'uploads'), { prefix: '/uploads' });
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));

@@ -9,6 +9,7 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { AddMessageDto } from './dto/add-message.dto';
+import { ChatOwnerOrAdminGuard } from '../auth/chat-owner-or-admin.guard';
 
 @ApiTags('chats')
 @ApiBearerAuth()
@@ -45,7 +46,8 @@ export class ChatController {
   ) {
     return this.chatService.updateChat(id, dto);
   }
-
+  
+  @UseGuards(ChatOwnerOrAdminGuard)
   @Delete(':id')
   deleteChat(@Param('id', ParseIntPipe) id: number) {
     return this.chatService.deleteChat(id);
