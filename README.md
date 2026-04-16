@@ -105,21 +105,34 @@ Authorization: Bearer <access_token>
 
 All routes require `Authorization: Bearer <token>`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/users/me` | Authenticated user's profile |
-| GET | `/users` | All users (with chats) |
-| GET | `/users/:id` | User by ID (with chats) |
-| GET | `/users/email/:email` | User by email (with chats) |
-| POST | `/users` | Create a user |
-| PUT | `/users/:id` | Update a user |
-| DELETE | `/users/:id` | Delete a user |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/users/me` | Any | Authenticated user's profile |
+| GET | `/users` | Any | All users (with chats) |
+| GET | `/users/:id` | Any | User by ID (with chats) |
+| GET | `/users/email/:email` | Any | User by email (with chats) |
+| GET | `/users/analytics` | ADMIN | User registration analytics |
+| POST | `/users` | Any | Create a user |
+| PATCH | `/users/:id` | Owner or ADMIN | Partially update a user |
+| DELETE | `/users/:id` | Owner or ADMIN | Delete a user |
 
-**Create / Update body**
+**Create body**
 ```json
 { "email": "user@example.com", "name": "Alice", "password": "secret" }
 ```
-All fields optional on update. Password is bcrypt-hashed automatically.
+
+**PATCH body** — all fields optional, password is bcrypt-hashed automatically:
+```json
+{ "email": "user@example.com", "name": "Alice", "password": "secret" }
+```
+
+**GET /users/analytics query params**
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `start` | Yes | Start date (YYYY-MM-DD) |
+| `end` | Yes | End date (YYYY-MM-DD) |
+| `interval` | Yes | `day`, `week`, or `month` |
 
 ---
 
@@ -127,16 +140,16 @@ All fields optional on update. Password is bcrypt-hashed automatically.
 
 All routes require `Authorization: Bearer <token>`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/chats` | Create a chat |
-| GET | `/chats` | All chats |
-| GET | `/chats/:id` | Chat by ID (with messages + attachments) |
-| GET | `/chats/user/:userId` | Chats for a user |
-| PUT | `/chats/:id` | Update chat title |
-| DELETE | `/chats/:id` | Delete a chat |
-| POST | `/chats/:id/messages` | Add a message to a chat |
-| GET | `/chats/:id/messages` | Messages in a chat (ascending by `createdAt`) |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/chats` | Any | Create a chat |
+| GET | `/chats` | Any | All chats |
+| GET | `/chats/:id` | Any | Chat by ID (with messages + attachments) |
+| GET | `/chats/user/:userId` | Any | Chats for a user |
+| PUT | `/chats/:id` | Any | Update chat title |
+| DELETE | `/chats/:id` | Owner or ADMIN | Delete a chat |
+| POST | `/chats/:id/messages` | Any | Add a message to a chat |
+| GET | `/chats/:id/messages` | Any | Messages in a chat (ascending by `createdAt`) |
 
 **Create Chat body**
 ```json
@@ -372,23 +385,24 @@ while (true) {
 ## Data Models
 
 ### User
-| Field | Type |
-|-------|------|
-| `id` | number |
-| `email` | string (unique) |
-| `name` | string \| null |
-| `password` | string (bcrypt hash) |
-| `createdAt` | timestamp |
-| `updatedAt` | timestamp |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | number | |
+| `email` | string (unique) | |
+| `name` | string \| null | |
+| `password` | string (bcrypt hash) | |
+| `role` | `USER` \| `ADMIN` | default `USER` |
+| `createdAt` | timestamp | |
+| `updatedAt` | timestamp | |
 
 ### Chat
-| Field | Type |
-|-------|------|
-| `id` | number |
-| `userId` | number |
-| `title` | string \| null |
-| `createdAt` | timestamp |
-| `updatedAt` | timestamp |
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | number | |
+| `userId` | number | cascade deletes on user delete |
+| `title` | string \| null | |
+| `createdAt` | timestamp | |
+| `updatedAt` | timestamp | |
 
 ### Message
 | Field | Type |
