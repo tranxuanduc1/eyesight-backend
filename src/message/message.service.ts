@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Message } from '../../generated/prisma/client';
 import { MessageRepository } from './message.repository';
+import { buildAnalyticsResponse, AnalyticsResponse, Interval } from '../common/analytics.helper';
 
 @Injectable()
 export class MessageService {
@@ -28,5 +29,10 @@ export class MessageService {
 
   async deleteMessage(id: number): Promise<Message> {
     return this.messageRepository.delete(id);
+  }
+
+  async getAnalytics(start: Date, end: Date, interval: Interval): Promise<AnalyticsResponse> {
+    const rows = await this.messageRepository.analyticsMessageCount(start, end, interval);
+    return buildAnalyticsResponse(rows, start, end, interval);
   }
 }

@@ -3,9 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { User } from '../../generated/prisma/client';
 import prisma from '../../lib/db';
 import * as bcrypt from 'bcrypt';
+import { UserRepository } from './user.repository';
+import { buildAnalyticsResponse, AnalyticsResponse, Interval } from '../common/analytics.helper';
 
 @Injectable()
 export class UserService {
+  constructor(private readonly userRepository: UserRepository) {}
   async createUser(data: { email: string; name?: string; password: string }): Promise<User> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
     
@@ -67,6 +70,11 @@ export class UserService {
     });
   }
 
+
+  async getAnalytics(start: Date, end: Date, interval: Interval): Promise<AnalyticsResponse> {
+    const rows = await this.userRepository.analyticsActiveUsers(start, end, interval);
+    return buildAnalyticsResponse(rows, start, end, interval);
+  }
 
   async validateUser(email: string, password: string) {
     const user = await this.findByEmail(email);

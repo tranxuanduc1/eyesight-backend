@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { PrismaClient } from '../../generated/prisma/client';
 import prisma from '../../lib/db';
+import { AnalyticsRow, Interval } from '../common/analytics.helper';
 
 type PrismaTx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
@@ -63,5 +64,22 @@ export class MessageRepository {
       where: { id },
       include: messageInclude,
     });
+  }
+
+  async analyticsMessageCount(start: Date, end: Date, interval: Interval): Promise<AnalyticsRow[]> {
+    // interval is a validated union type ('day'|'week'|'month'), safe to inline
+    const rows = await prisma.$queryRawUnsafe<{ bucket: Date; count: bigint }[]>(
+      `SELECT
+        DATE_TRUNC('${interval}', "createdAt") AS bucket,
+        COUNT(*)::bigint                        AS count
+       FROM "Message"
+       WHERE "createdAt" >= $1
+         AND "createdAt" <= $2
+       GROUP BY bucket
+       ORDER BY bucket ASC`,
+      start,
+      end,
+    );
+    return rows;
   }
 }

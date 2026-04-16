@@ -14,13 +14,19 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  password  String 
+  password  String
+  role      Role     @default(USER)
   // Relationship: One user can have many chats
   chats     Chat[]
 }
