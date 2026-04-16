@@ -43,6 +43,7 @@ export class UserController {
     }
     const startDate = new Date(start);
     const endDate = new Date(end);
+    endDate.setUTCHours(23, 59, 59, 999);
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       throw new BadRequestException('start and end must be valid dates (YYYY-MM-DD)');
     }
