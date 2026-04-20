@@ -19,8 +19,11 @@ async function bootstrap() {
   origin: [
     'http://localhost:3000',
     'http://0.0.0.0:3000',
-    'https://eyesight.app',
-    'https://admin.eyesight.app',
+    'https://eyesight.blog',
+    'https://www.eyesight.blog',
+    'http://eyesight.blog',
+    'http://www.eyesight.blog',
+
   ],
   credentials: true,
 });
