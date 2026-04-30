@@ -1,0 +1,37 @@
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eyesight-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: eyesight-backend
+  template:
+    metadata:
+      labels:
+        app: eyesight-backend
+    spec:
+      containers:
+      - name: eyesight-backend
+        image: xuanduck/eyesight-backend:latest
+        ports:
+        - containerPort: 3001
+        envFrom:
+        - secretRef:
+            name: eyesight-backend-secret
+
+---
+apiVersion: v1
+kind: Service                                                                                                                                                    
+metadata:                                                                                                                                                      
+  name: eyesight-backend                                                                                                                                        
+spec:
+  selector:                                                                                                                                                      
+    app: eyesight-backend                                                                                                                                     
+  ports:
+  - port: 80
+    targetPort: 3001
+  type: NodePort   # or LoadBalancer if using cloud
