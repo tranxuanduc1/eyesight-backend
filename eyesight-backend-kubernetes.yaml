@@ -17,6 +17,7 @@ spec:
       containers:
       - name: eyesight-backend
         image: xuanduck/eyesight-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3001
         envFrom:
@@ -34,4 +35,4 @@ spec:
   ports:
   - port: 80
     targetPort: 3001
-  type: NodePort   # or LoadBalancer if using cloud
+  type: ClusterIP   # or LoadBalancer if using cloud

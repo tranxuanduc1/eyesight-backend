@@ -15,6 +15,7 @@ export class LlmService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages }),
+      signal: AbortSignal.timeout(600_000),
     });
 
     if (!response.ok) {
