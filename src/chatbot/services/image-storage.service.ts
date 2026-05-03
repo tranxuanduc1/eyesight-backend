@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 @Injectable()
 export class ImageStorageService {
@@ -9,12 +14,20 @@ export class ImageStorageService {
     chatId: number,
     side: 'left' | 'right',
   ): Promise<string> {
-    const ext = file.originalname.split('.').pop() ?? 'jpg';
-    const filename = `${chatId}_${side}_${Date.now()}.${ext}`;
-    const dir = path.join(process.cwd(), 'uploads', 'fundus');
-    await fs.mkdir(dir, { recursive: true });
-    const fullPath = path.join(dir, filename);
-    await fs.writeFile(fullPath, file.buffer);
-    return path.join('uploads', 'fundus', filename);
+    const publicId = `${chatId}_${side}_${Date.now()}`;
+    const result = await new Promise<{ secure_url: string }>(
+      (resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            { folder: 'eyesight/fundus', public_id: publicId },
+            (error, result) => {
+              if (error || !result) return reject(error);
+              resolve(result);
+            },
+          )
+          .end(file.buffer);
+      },
+    );
+    return result.secure_url;
   }
 }
